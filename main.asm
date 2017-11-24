@@ -2,7 +2,6 @@
 	user_input: .space 9
 .text
 	Main:
-
             # Get input from user
             li $v0, 8
             la $a0, user_input
@@ -19,17 +18,15 @@
             addi $a2, $zero, 0
             addi $a3, $zero, 7
 
-            jal subprogram_2
-             
-            # Print the decimal value of the result
-            li $v0, 1
-            add $a0, $zero, $v1
-            syscall
+            jal subprogram_2                # Convert the hexadecimal number to a decimal number
+            jal subprogram_3                # Print the undigned decimal value of the result
+          
             
             Exit:
-			# Exits the program
-			li $v0, 10
-			syscall
+			    # Exits the program
+			    li $v0, 10
+			    syscall
+
 	subprogram_1:
 		# Subprogram that converts a hexadecimal character to a decimal integer
 		# It will use $v1 to return the result and $a2 for the argument
@@ -77,4 +74,43 @@
             lw $ra, 0($sp)			        # Get the old return value
             sw $t4, 0($sp)                  # Store the result on the stack
             jr $ra    
-        	
+    
+    subprogram_3:
+        # Prints an unsigned decimal integer.
+        # The stack is used to pass parameters.
+        # No values are returned
+        
+        lw $t0, 0($sp)                      # Get the argument from the stack        
+
+        addi $t1, $zero, 10                 # Set the divisor to 10
+        addi $t4, $zero, 0                  # Initialize a counter to 0
+
+        Loop2:
+            divu $t0, $t1                   # $t0 / $t1 --> Remainder in HIGH, Quotient in LOW
+            mflo $t0                        # Set the new Dividend to be the Quotient
+            mfhi $t2                        # Get the Remainder (digit)
+            addi $t2, $t2, 48               # Convert the digit to its ASCII character code
+
+            # Store the address of the stack pointer in $t3 and add the counter to it
+            la $t3, ($sp)
+            add $t3, $t3, $t4       
+
+            sb $t2, 0($t3)                  # Store the least siginificant byte of the remainder on the stack at the address of $t3
+            # If the Dividend is 0 --> Exit the loop to Loop3
+            beq $t0, $zero, Loop3
+
+            addi $t4, $t4, 1                # Increment the counter
+
+            j Loop2
+
+        Loop3:
+            # Print the digits in the reverse order
+            lb $a0, 0($t3)
+            li $v0, 11
+            syscall
+            
+            beq $t3, $sp, Return3           # If the address in $t3 == address in $sp --> Return3
+            addi $t3, $t3, -1               # Decrement the addreess in $t3
+            j Loop3        
+        Return3:
+            jr $ra	
