@@ -1,27 +1,140 @@
 .data
-	user_input: .space 9
+	user_input: .space 1001
 .text
 	Main:
             # Get input from user
             li $v0, 8
             la $a0, user_input
-            li $a1, 9
+            li $a1, 1001
             syscall
             
             # Get the address of where the input is stored
             la $s0, user_input
 
-            # Get the hexadecimal character the user entered
-            # lb $a2, 0($s0)
+            # Loop through the string to find the end index
+            addi $s1, $zero, 0                  # Initialize the offset to 0
+            Loop4:
+                add $t0, $s0, $s1               # Increment the address of the user input
+                lb $t1, 0($t0)                  # Get the current character
+                beq $t1, 0, StartOfString       # If current char is end line char (0) --> StartOfString
+                beq $t1, 10, StartOfString      # If current char is new line char (10) --> StartOfString
+                addi $s1, $s1, 1                # Increment the offset
+                j Loop4
 
-            # Loop through string to get the start and end indices
-            addi $a2, $zero, 0
-            addi $a3, $zero, 7
-
-            jal subprogram_2                # Convert the hexadecimal number to a decimal number
-            jal subprogram_3                # Print the undigned decimal value of the result
-          
             
+            
+            StartOfString:
+                # addi $s1, $s1, -1               # Decrement the end index by 1
+                # addi $a2, $zero, 0            # Initialize the start index to 0
+                addi $a3, $zero, 0              # Innitialize the end parameter to the end index
+            
+            Loop5:
+                # While $a3 <= $s1
+                add $a2, $zero, $a3             # Initialize the start index to the end index
+                
+                Loop6:
+                    # While the current char is either spaces or tabs or commas, print the char
+                    # And increment both the start and end indices
+
+                    add $t0, $s0, $a3           # Get address of the current character
+                    lb $a0, 0($t0)              # Get the current character
+                    beq $a0, 9, PrintChar       # If the current char is a tab -- > PrintChar
+                    beq $a0, 32, PrintChar      # If the current char is a space --> PrintChar
+                    bne $a0, 44, Loop7          # If the current char is not a comma (,) --> Loop7
+
+                    PrintChar:
+                        li $v0, 11              # Print the current character
+                        syscall
+                    
+                    beq $a3, $s1, Continue      # If the end index is equal to the end of string --> Continue
+                    addi $a2, $a2, 1            # Increment the start index
+                    addi $a3, $a3, 1            # Increment the end index
+                    j Loop6
+
+                Loop7:
+                    # While the end index is not a comma or NUL (0) or \n(10), increment the end index
+                    add $t0, $s0, $a3           # Get the address of the char at the end index
+                    lb $t1, 0($t0)              # Get the char at that address
+                    beq $t1, 44, Loop8          # If the current char is a comma (,) --> Loop8
+                    # beq $t1, 0, Continue        # If the current char is NUL --> Continue
+                    # beq $t1, 10, Continue       # If the current char is '/n' --> Continue
+                    beq $a3, $s1, Continue      # If the end index is equal to the end of string --> Continue
+                    addi $a3, $a3, 1            # Increment the end index
+                    j Loop7
+
+                Loop8:
+                    # While the current char is either space or tabs or commas, decrement the end index
+                    add $t0, $s0, $a3           # Get address of the current character
+                    lb $t1, 0($t0)              # Get the current character
+
+
+                    beq $t1, 9, DecrementEndIndex           # If the current char is a tab -- > DecrementEndIndex
+                    beq $t1, 32, DecrementEndIndex          # If the current char is a space --> DecrementEndIndex
+                    bne $t1, 44, GetDecimalVal              # If the current char is not a comma (,) --> GetDecimalVal
+
+                    DecrementEndIndex:
+                        addi $a3, $a3, -1
+
+                    j Loop8          
+
+                GetDecimalVal:
+                    sub $t0, $a3, $a1               # Get the difference between the start and end index
+                    bgt $t0, 7, TooLarge            # If the difference is grreater than 7 --> TooLarge
+
+                    jal subprogram_2                # Convert the hexadecimal number to a decimal number
+                    jal subprogram_3                # Print the undigned decimal value of the result
+                    
+                    j Next                          # Go to the next iteration of the loop
+
+                    TooLarge:
+                        # Print too large
+                        j Next
+
+                    NotANumber:
+                        # Print NaN
+                        # No Need to jump to Next, it will fall through to next
+                            
+                Next:
+                    beq $a3, $s1, Continue      # If the end index is equal to the end of string --> Continue
+                    addi $a2, $a2, 1            # Increment the start index
+                    addi $a3, $a3, 1            # Increment the end index
+                
+                    j Loop5
+
+            Continue:
+                addi $a3, $a3, -1               # Decrement the end index by 1
+                Loop:
+                    # While the current char is either space or tabs or commas, decrement the end index
+                      add $t0, $s0, $a3           # Get address of the current character
+                      lb $t1, 0($t0)              # Get the current character
+  
+  
+                      beq $t1, 9, DecrementEndIndex2           # If the current char is a tab -- > DecrementEndIndex
+                      beq $t1, 32, DecrementEndIndex2          # If the current char is a space --> DecrementEndIndex
+                      bne $t1, 44, GetDecimalVal2              # If the current char is not a comma (,) --> GetDecimalVal
+  
+                      DecrementEndIndex2:
+                          addi $a3, $a3, -1
+  
+                      j Loop
+  
+                  GetDecimalVal2:
+                      sub $t0, $a3, $a1               # Get the difference between the start and end index
+                      bgt $t0, 7, TooLarge2            # If the difference is grreater than 7 --> TooLarge
+  
+                      jal subprogram_2                # Convert the hexadecimal number to a decimal number
+                      jal subprogram_3                # Print the undigned decimal value of the result
+  
+                      j Exit                          # Go to the next iteration of the loop
+  
+                      TooLarge2:
+                          # Print too large
+                          j Exit
+  
+                      NotANumber2:
+                          # Print NaN
+                          # No Need to jump to Next, it will fall through to next
+           
             Exit:
 			    # Exits the program
 			    li $v0, 10
