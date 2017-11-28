@@ -4,7 +4,7 @@
 	nan:	    .asciiz		"NaN"
 	
 .text
-	Main:
+	main:
             li $v0, 8                           # Get input from user
             la $a0, user_input
             li $a1, 1001
