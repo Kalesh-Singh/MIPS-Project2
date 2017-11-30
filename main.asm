@@ -1,5 +1,5 @@
 .data
-	user_input: .space      1001
+	user_input: .space      	1001			# We need space for 1000 characters and the endline char.
 	too_large:  .asciiz		"too large"
 	nan:	    .asciiz		"NaN"
 	
@@ -65,14 +65,14 @@
 
         add $t0, $zero, $a2                 # Copy the argument
         addi $t1, $zero, 87                 # Initialize the reference point to 87
-        bgt $t0, 'f', NotANumber	        # If the char is greater than 'f' --> NotANumber
+        bgt $t0, 'f', NotANumber	    # If the char is greater than 'f' --> NotANumber
         bge $t0, 'a', Return1               # If char is within a to f --> Return1
         addi $t1, $zero, 55                 # Change the reference point to 55
-        bgt $t0, 'F', NotANumber	        # If the char is greater than 'F' --> NotANumber
+        bgt $t0, 'F', NotANumber	    # If the char is greater than 'F' --> NotANumber
         bge $t0, 'A', Return1               # If char is within A to F --> Return 1
         addi $t1, $zero, 48                 # Change the reference point to 48
-        bgt $t0, '9', NotANumber	        # If the char is greater than '9' --> NotANumber
-        blt $t0, '0', NotANumber	        # If the char is greater than '0' --> NotANumber
+        bgt $t0, '9', NotANumber	    # If the char is greater than '9' --> NotANumber
+        blt $t0, '0', NotANumber	    # If the char is greater than '0' --> NotANumber
         
         Return1:
             sub $v1, $t0, $t1               # Subtract the refernce from the character value  		
@@ -129,8 +129,8 @@
             j Loop1
         
         Return2:
-            bgt $s1, 7, TooLarge          # If the length of the string greater than 8 --> TooLarge
-            lw $ra, 0($sp)			        # Get the old return address
+            bgt $s1, 7, TooLarge            # If the length of the string greater than 8 --> TooLarge
+            lw $ra, 0($sp)	            # Get the old return address
             sw $t4, 0($sp)                  # Store the result on the stack
             jr $ra    
     
